@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="InboxPilot">
+  <defs>
+    <linearGradient id="ip-bg" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+  <rect width="40" height="40" rx="10" fill="url(#ip-bg)"/>
+  <rect x="8" y="13" width="24" height="16" rx="2.5" fill="white"/>
+  <path d="M8 15.5 20 24 32 15.5" fill="#DBEAFE"/>
+  <path d="M8 15.5 20 24 32 15.5" stroke="#2563EB" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M8 27.5 15.5 21.5M32 27.5 24.5 21.5" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="29" cy="15" r="4.5" fill="#F97316" stroke="white" stroke-width="1.5"/>
+</svg>
