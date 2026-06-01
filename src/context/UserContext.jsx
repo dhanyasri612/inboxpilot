@@ -26,9 +26,10 @@ export function UserProvider({ children }) {
           return;
         }
 
-        if (profile?.connected && profile.emailAddress) {
-          setGmailState({ address: profile.emailAddress, connected: true });
-          setAddress(profile.emailAddress);
+        const profileEmail = profile?.emailAddress || profile?.email || "";
+        if (profile?.connected && profileEmail) {
+          setGmailState({ address: profileEmail, connected: true });
+          setAddress(profileEmail);
           setConnected(true);
           return;
         }

@@ -61,16 +61,17 @@ export default function SettingsPage() {
 
   async function loadProfile() {
     const profile = await inboxApi.getGmailProfile();
-    const isConnected = Boolean(profile.connected && profile.emailAddress);
+    const profileEmail = profile.emailAddress || profile.email || "";
+    const isConnected = Boolean(profile.connected && profileEmail);
 
     setGmailProfile({
       connected: isConnected,
-      emailAddress: profile.emailAddress || "",
+      emailAddress: profileEmail,
     });
 
     if (isConnected) {
-      setGmailState({ address: profile.emailAddress, connected: true });
-      return profile.emailAddress;
+      setGmailState({ address: profileEmail, connected: true });
+      return profileEmail;
     }
 
     clearGmailConnection();
