@@ -222,6 +222,24 @@ export const inboxApi = {
     });
     return response.data;
   },
+
+  async updateEmailStatus(messageId, status, email = "") {
+    const response = await api.post("/emails/update-status", {
+      messageId,
+      status,
+      email,
+    });
+    return response.data;
+  },
+
+  async generateReply(messageId, replyType, email = "") {
+    const response = await api.post("/emails/generate-reply", {
+      messageId,
+      replyType,
+      email,
+    });
+    return response.data;
+  },
 };
 
 export { EMPTY_BRIEF, EMPTY_DASHBOARD };

@@ -175,3 +175,40 @@ export function buildBriefFromEmails(emails) {
 
   return { brief: lines.join("\n") };
 }
+
+export function stripHtml(html) {
+  if (!html) return "";
+
+  // 1. Remove script and style tags and their contents
+  let doc = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "");
+  doc = doc.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "");
+
+  // 2. Replace common block elements with newlines to preserve some layout structure
+  doc = doc.replace(/<\/p>/gi, "\n\n");
+  doc = doc.replace(/<\/div>/gi, "\n");
+  doc = doc.replace(/<br\s*\/?>/gi, "\n");
+  doc = doc.replace(/<\/tr>/gi, "\n");
+  doc = doc.replace(/<\/li>/gi, "\n");
+
+  // 3. Strip remaining tags
+  doc = doc.replace(/<[^>]+>/g, " ");
+
+  // 4. Decode common html entities using browser DOMParser if available
+  if (typeof DOMParser !== "undefined") {
+    try {
+      const parser = new DOMParser();
+      const decodedDoc = parser.parseFromString(`<!DOCTYPE html><body>${doc}`, "text/html");
+      doc = decodedDoc.body.textContent || doc;
+    } catch (e) {
+      // Fallback: simple textarea decoding
+      try {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = doc;
+        doc = txt.value;
+      } catch (err) {}
+    }
+  }
+
+  // 5. Clean up multiple newlines and trailing whitespace
+  return doc.replace(/\r\n/g, "\n").replace(/\n\s*\n\s*\n+/g, "\n\n").trim();
+}

@@ -2,23 +2,33 @@ import { useMemo, useState } from "react";
 import PageSkeleton from "../components/PageSkeleton";
 import EmptyInboxState from "../components/EmptyInboxState";
 import SectionHeader from "../components/SectionHeader";
+import EmailDetailsModal from "../components/EmailDetailsModal";
 import { useInboxData } from "../hooks/useInboxData";
-import { CATEGORY_ORDER, getCategoryMeta } from "../utils/categoryMeta";
-import { formatDeadline, getGmailUrl, normalizeCategory } from "../utils/emailUtils";
+import { getCategoryMeta } from "../utils/categoryMeta";
+import { formatDeadline, normalizeCategory } from "../utils/emailUtils";
 
 export default function CareerTrackerPage() {
-  const { emails, loading, scopeLabel, hasUser } = useInboxData();
+  const { emails, loading, scopeLabel, hasUser, refreshData } = useInboxData();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [selectedEmail, setSelectedEmail] = useState(null);
 
-  const categories = useMemo(() => ["All", ...CATEGORY_ORDER], []);
+  const categories = useMemo(
+    () => ["All", "Job", "Internship", "Interview", "Networking", "Learning", "College"],
+    [],
+  );
 
   const filteredEmails = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return [...emails]
       .filter((email) => {
+        // Only include career-related emails in the Career Tracker
+        if (!email.career_related) {
+          return false;
+        }
+
         const matchesCategory =
           categoryFilter === "All" ||
           normalizeCategory(email.category) ===
@@ -36,11 +46,21 @@ export default function CareerTrackerPage() {
           query.length === 0 || searchableText.includes(query);
         return matchesCategory && matchesSearch;
       })
-      .sort((left, right) =>
-        sortDirection === "desc"
-          ? right.priority - left.priority
-          : left.priority - right.priority,
-      );
+      .sort((left, right) => {
+        const priorityDiff =
+          sortDirection === "desc"
+            ? (right.priority ?? 0) - (left.priority ?? 0)
+            : (left.priority ?? 0) - (right.priority ?? 0);
+
+        if (priorityDiff !== 0) {
+          return priorityDiff;
+        }
+
+        // Sub-sort by date (newest first)
+        const leftDate = Number(left.internalDate || 0);
+        const rightDate = Number(right.internalDate || 0);
+        return rightDate - leftDate;
+      });
   }, [categoryFilter, emails, search, sortDirection]);
 
   if (!hasUser) {
@@ -93,7 +113,7 @@ export default function CareerTrackerPage() {
       <div className="table-shell">
         <div className="border-b px-5 py-3">
           <SectionHeader
-            title="All emails"
+            title="All career opportunities"
             description={`${filteredEmails.length} result${filteredEmails.length === 1 ? "" : "s"} · ${scopeLabel}`}
           />
         </div>
@@ -113,7 +133,7 @@ export default function CareerTrackerPage() {
               {filteredEmails.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="empty-state">
-                    No emails matched your filters for {scopeLabel.toLowerCase()}.
+                    No career emails matched your filters for {scopeLabel.toLowerCase()}.
                   </td>
                 </tr>
               ) : (
@@ -122,22 +142,17 @@ export default function CareerTrackerPage() {
 
                   return (
                     <tr
-                      key={`${email.subject}-${email.sender}`}
-                      className="transition hover:bg-[color:var(--surface-elevated)]"
+                      key={email.id}
+                      className="transition hover:bg-[color:var(--surface-elevated)] cursor-pointer"
+                      onClick={() => setSelectedEmail(email)}
                     >
                       <td className="px-5 py-3.5 font-medium text-[color:var(--text-primary)]">
                         {email.company || "Unknown"}
                       </td>
                       <td className="max-w-xs px-5 py-3.5 text-[color:var(--text-secondary)]">
-                        <a
-                          href={getGmailUrl(email)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="line-clamp-2 font-medium text-[color:var(--text-primary)] transition hover:text-brand-500"
-                          title="Open in Gmail"
-                        >
+                        <span className="line-clamp-2 font-medium hover:text-brand-500">
                           {email.subject}
-                        </a>
+                        </span>
                       </td>
                       <td className="px-5 py-3.5">
                         <span className={`chip ${meta.chip}`}>
@@ -163,6 +178,16 @@ export default function CareerTrackerPage() {
           </table>
         </div>
       </div>
+
+      {selectedEmail && (
+        <EmailDetailsModal
+          email={selectedEmail}
+          onClose={() => {
+            setSelectedEmail(null);
+            refreshData();
+          }}
+        />
+      )}
     </div>
   );
 }
